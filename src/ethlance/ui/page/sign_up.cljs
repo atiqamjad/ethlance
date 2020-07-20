@@ -59,12 +59,18 @@
         *biography (re/subscribe [:page.sign-up/candidate-biography])
         *country (re/subscribe [:page.sign-up/candidate-country])
         *ready-for-hire? (re/subscribe [:page.sign-up/candidate-ready-for-hire?])
-        gh-client-id (-> (<sub [::subs/config] :github :client-id))
+        config (<sub [::subs/config])
+        root-url (-> (config :root-url))
+        gh-client-id (-> (config :github :client-id))
         active-page (<sub [::router.subs/active-page])]
     (r/create-class
      {:display-name "c-candidate-sign-up"
       :component-did-mount (fn []
                              (when-let [code (-> active-page :query :code)]
+
+
+                               ;; TODO : send to API
+
                                  (log/debug "I did mount" {:c code})))
       :reagent-render
       (fn []
@@ -108,7 +114,7 @@
             [c-button
              {:size :large
               :href (str "https://github.com/login/oauth/authorize?client_id=" gh-client-id "&scope=user"
-                             "&redirect_uri=" "http://127.0.0.1:6500" active-page)}
+                             "&redirect_uri=" root-url active-page)}
              [c-button-icon-label {:icon-name :github :label-text "Connect Github" :inline? false}]]]
            [:div.form-connect-linkedin
             [c-button
