@@ -126,7 +126,7 @@
                    [figwheel "0.5.20"]
                    [figwheel-sidecar "0.5.20"]
                    [org.clojure/tools.nrepl "0.2.13"]
-                   [day8.re-frame/re-frame-10x "0.6.5"]]
+                   [re-frisk "1.3.4"]]
     :plugins [[lein-figwheel "0.5.20"]
               [lein-doo "0.1.10"]]
     :repl-options {:init-ns user
@@ -159,7 +159,10 @@
                 :source-map-timestamp true
                 :closure-defines {"re_frame.trace.trace_enabled_QMARK_" true
                                   goog.DEBUG true}
-                :preloads [day8.re-frame-10x.preload]}}
+                :preloads [re-frisk.preload]
+                :external-config {:devtools/config {:features-to-install [:formatters :hints]
+                                                    :fn-symbol "F"
+                                                    :print-config-overrides true}}}}
 
     {:id "dev-server"
      :source-paths ["src/ethlance/server" "src/ethlance/shared" "dev/server/cljs"]
