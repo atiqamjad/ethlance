@@ -24,7 +24,8 @@
     "eth-sig-util" : "2.4.4",
     "jsonwebtoken" :"8.5.1",
     "ethereumjs-wallet": "0.6.0",
-    "jsedn" :"0.4.1"
+    "jsedn" :"0.4.1",
+    "web3": "1.2.0"
   },
   "devDependencies": {
     "axios" : "0.19.0",
