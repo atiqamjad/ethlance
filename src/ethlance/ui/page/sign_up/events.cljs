@@ -2,7 +2,9 @@
   (:require [district.parsers :refer [parse-float]]
             [district.ui.router.effects :as router.effects]
             [ethlance.ui.event.utils :as event.utils]
-            [re-frame.core :as re]))
+            [ethlance.ui.graphql :as graphql]
+            [re-frame.core :as re]
+            [taoensso.timbre :as log]))
 
 (def state-key :page.sign-up)
 (def state-default
@@ -87,3 +89,17 @@
 (re/reg-event-fx :page.sign-up/set-arbiter-languages (create-assoc-handler :arbiter/languages))
 (re/reg-event-fx :page.sign-up/set-arbiter-biography (create-assoc-handler :arbiter/biography))
 (re/reg-event-fx :page.sign-up/set-arbiter-country (create-assoc-handler :arbiter/country))
+
+
+(re/reg-event-fx
+ :page.sign-up/send-github-verification-code
+ (fn [{:keys [db] :as cofx} [_ code]]
+   {:dispatch [::graphql/query {:query
+                                "mutation githubSignUp($githubSignUpInput: githubSignUpInput!) {
+                                   githubSignUp(input: $githubSignUpInput) {
+                                     todo
+                                   }
+                                 }"
+                                :variables {:githubSignUpInput {:code code}}
+                                :on-success #(log/info "that worked")
+                                }]}))

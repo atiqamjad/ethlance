@@ -7,6 +7,7 @@
                  [akiroz.re-frame/storage "0.1.4"]
                  [camel-snake-kebab "0.4.1"]
                  [cljs-web3-next "0.1.3"]
+                 [cljsjs/axios "0.19.0-0"]
                  [cljsjs/buffer "5.1.0-1"]
                  [cljsjs/d3 "5.12.0-0"]
                  [cljsjs/react-infinite "0.13.0-0"]

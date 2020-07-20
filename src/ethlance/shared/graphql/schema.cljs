@@ -101,7 +101,7 @@
     employer_professionalTitle: String
   }
 
-  input CandidateInput{
+  input CandidateInput {
     user_address: ID
     candidate_bio: String
     candidate_dateRegistered: Date
@@ -112,12 +112,16 @@
     candidate_rate: Int
   }
 
-  input ArbiterInput{
+  input ArbiterInput {
     user_address: ID
     arbiter_dateRegistered: Date
     arbiter_bio: String
     arbiter_feeCurrencyId: Keyword
     arbiter_fee: Int
+  }
+
+  input githubSignUpInput {
+   code: String!
   }
 
   type Mutation {
@@ -131,7 +135,9 @@
     updateCandidate(candidate: CandidateInput!): Boolean!,
     updateArbiter(arbiter: ArbiterInput!): Boolean!,
     createJobProposal(job_id: Int!, text: String!, rate: Int!, rateCurrencyId: String!): Boolean!,
-    replayEvents: Boolean!
+    replayEvents: Boolean!,
+
+    githubSignUp(input: githubSignUpInput!): githubSignUpPayload!
 
   }
 
@@ -524,5 +530,12 @@
     message_creator: String
     jobStoryMessageType: String
   }
+
+  # Social login types
+  type githubSignUpPayload {
+    todo: Boolean
+  }
+
+
 
   ")

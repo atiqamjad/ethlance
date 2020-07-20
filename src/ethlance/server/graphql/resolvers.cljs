@@ -483,6 +483,17 @@
                                       :ethlance-job-story/proposal-rate rate
                                       :ethlance-job-story/proposal-rate-currency-id rate-currency-id}))))
 
+;; TODO : obtain access token
+;; request data
+;; store it server side in db
+(defn github-signup-mutation [_ {:keys [:input] :as all} _]
+  (let [{:keys [:code] :as input} (graphql-utils/gql-input->clj input)]
+
+    (log/debug "github-signup-mutation" {:a all
+                                         :i input})
+
+    ))
+
 (defn replay-events [_ _ _]
   (db/with-async-resolver-tx conn
     (let [dispatch-event (:dispatcher @syncer/syncer)]
@@ -538,4 +549,6 @@
                                :updateArbiter update-arbiter-mutation
                                :createJobProposal (require-auth create-job-proposal-mutation)
                                :replayEvents replay-events
+                               :githubSignUp github-signup-mutation
+
                                }})

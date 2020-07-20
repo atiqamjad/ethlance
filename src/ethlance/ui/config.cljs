@@ -30,8 +30,7 @@
 
    :graphql
    {:schema graphql.schema/schema
-    ;; :url "http://localhost:4000/graphql"
-    :url "http://192.168.0.111:4000/graphql"
+    :url "http://localhost:4000/graphql"
     :jwt-sign-secret "SECRET"}
 
    :root-url "http://127.0.0.1:6500"
