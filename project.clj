@@ -100,7 +100,6 @@
 
   :plugins [[lein-ancient "0.6.15"]
             [lein-cljsbuild "1.1.8"]
-            [lein-npm "0.6.2"]
             [lein-shell "0.5.0"]
             [lein-marginalia "0.9.1"]]
 
@@ -117,38 +116,6 @@
                honeysql
                reagent
                mount]
-  :npm {:dependencies
-        [["@sentry/node" "4.2.1"]
-         [express "4.17.1"]
-         [axios "0.19.2"]
-         [body-parser "1.19.0"]
-         [apollo-server-express "2.12.0"]
-         [graphql-middleware "4.0.1"]
-         [graphql-tools "4.0.5"]
-         [graphql "14.2.1"]
-
-         [pg "8.2.1"]
-         [better-sqlite3 "5.4.0"]
-         [chalk "2.3.0"]
-         [cors "2.8.4"]
-         [source-map-support "0.5.9"]
-         [ws "4.0.0"]
-
-         ;; Sign in functionality
-         [eth-sig-util "2.4.4"]
-         [jsonwebtoken "8.5.1"]
-         ;; Note: district0x/district-server-web3 uses ganache-core@2.0.2, which depends on 0.6.0
-         ;; Note: https://github.com/ethereumjs/ethereumjs-wallet/issues/64
-         [ethereumjs-wallet "0.6.0"]
-         [jsedn "0.4.1"]
-
-         ;; Development Dependencies
-         [axios "0.19.0"]
-         [less "3.10.3"]
-         [less-watch-compiler "1.14.1"]
-         [ganache-cli "6.7.0"]
-         [truffle "5.0.38"]]}
-
   :profiles
   {:dev
    {:source-paths ["src" "test" "dev"]
