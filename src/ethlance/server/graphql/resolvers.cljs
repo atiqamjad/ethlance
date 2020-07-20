@@ -486,11 +486,10 @@
 ;; TODO : obtain access token
 ;; request data
 ;; store it server side in db
-(defn github-signup-mutation [_ {:keys [:input] :as all} _]
-  (let [{:keys [:code] :as input} (graphql-utils/gql-input->clj input)]
+(defn github-signup-mutation [_ {:keys [input] :as all} _]
+  (let [{:keys [code]} input]
 
-    (log/debug "github-signup-mutation" {:a all
-                                         :i input})
+    (log/debug "github-signup-mutation" {:c code})
 
     ))
 
