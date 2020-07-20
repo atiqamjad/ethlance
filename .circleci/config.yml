@@ -9,7 +9,7 @@ jobs:
     working_directory: ~/ethlance
     docker:
       # Primary container image where all steps run.
-      - image: district0x/cljs-dev:e701583
+      - image: district0x/cljs-dev
       # Secondary container images on common network.
       - image: trufflesuite/ganache-cli:v6.9.1
         command: [-d, -m district0x, -p 8549, -l 8000000, --noVMErrorsOnRPCResponse]
