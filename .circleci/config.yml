@@ -36,7 +36,7 @@ jobs:
       - restore_cache:
           name: Restore npm package cache
           keys:
-            - npm-dependencies-{{ checksum "yar.lock" }}
+            - npm-dependencies-{{ checksum "yarn.lock" }}
       - run:
           name: Install node modules
           command: yarn deps
