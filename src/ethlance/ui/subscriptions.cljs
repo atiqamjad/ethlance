@@ -1,7 +1,7 @@
 (ns ethlance.ui.subscriptions
   "Main entry point for all registered subscriptions within re-frame for ethlance."
   (:require
-   [re-frame.core :as re]
+   [re-frame.core :as re-frame]
 
    ;; Ethlance Local Component Subscriptions
    [ethlance.ui.component.modal.subscriptions]     ;; :modal/*
@@ -22,3 +22,8 @@
 
    ;; Ethlance Global Subscriptions
    ;; /Nothing here, yet/
+
+(re-frame/reg-sub
+ ::config
+ (fn [db _]
+   (get db :ethlance/config)))

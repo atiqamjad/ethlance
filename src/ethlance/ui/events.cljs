@@ -1,31 +1,17 @@
 (ns ethlance.ui.events
   "Main entry point for all registered events within re-frame for ethlance."
-  (:require 
-   [re-frame.core :as re]
-
-   ;; District UI Events
-   [district.ui.logging.events]
-
-   ;; Ethlance Component Event Handlers
-   [ethlance.ui.component.modal.events]    ;; :modal/*
-
-   ;; Ethlance Page Event Handlers
-   [ethlance.ui.page.me.events]            ;; :page.me/*
-   [ethlance.ui.page.jobs.events]          ;; :page.jobs/*
-   [ethlance.ui.page.sign-up.events]       ;; :page.sign-up/*
-   [ethlance.ui.page.candidates.events]    ;; :page.candidates/*
-   [ethlance.ui.page.arbiters.events]      ;; :page.arbiters/*
-   [ethlance.ui.page.employers.events]     ;; :page.employers/*
-   [ethlance.ui.page.profile.events]       ;; :page.profile/*
-   [ethlance.ui.page.job-contract.events]  ;; :page.job-contract/*
-   [ethlance.ui.page.job-detail.events]    ;; :page.job-detail/*
-   [ethlance.ui.page.new-job.events]       ;; :page.new-job/*
-   [ethlance.ui.page.invoices.events]      ;; :page.invoices/*
-   [ethlance.ui.page.new-invoice.events]   ;; :page.new-invoice/*
-
-   ;; Ethlance Main Event Handlers
-   [ethlance.ui.event.sign-in]))           ;; :user/*
-
+  (:require ethlance.ui.page.arbiters.events
+            ethlance.ui.page.candidates.events
+            ethlance.ui.page.employers.events
+            ethlance.ui.page.invoices.events
+            ethlance.ui.page.job-contract.events
+            ethlance.ui.page.job-detail.events
+            ethlance.ui.page.jobs.events
+            ethlance.ui.page.me.events
+            ethlance.ui.page.new-invoice.events
+            ethlance.ui.page.new-job.events
+            ethlance.ui.page.profile.events
+            [re-frame.core :as re]))
 
 (def forwarded-events
   "Forwarded Events.
@@ -50,11 +36,12 @@
 
 (defn initialize
   "Sets initial db state for local components, local pages, and site-wide events."
-  [{:keys [db] :as cofx} _]
+  [{:keys [db] :as cofx} [_ config]]
   (let [new-db
         (assoc db
                ;; Component Events
                ;; /Nothing here, yet/
+               :ethlance/config config
 
                ;; Page Events
                ethlance.ui.page.me.events/state-key

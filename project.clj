@@ -109,7 +109,7 @@
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target" "dist"]
   :figwheel {:css-dirs ["resources/public/css"]
              :nrepl-port 9000
-             :server-ip "0.0.0.0"
+             :server-ip "127.0.0.1"
              :server-port 6500
              :ring-handler handler/figwheel-request-handler}
   :exclusions [cljsjs/react-with-addons
@@ -134,7 +134,7 @@
 
    :dev-ui
    {:figwheel {:nrepl-port 9000
-               :server-ip "0.0.0.0"
+               :server-ip "127.0.0.1"
                :server-port 6500}}
 
    :dev-server

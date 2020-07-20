@@ -1,13 +1,8 @@
 (ns ethlance.ui.page.sign-up.events
-  (:require
-   [re-frame.core :as re]
-   [district.parsers :refer [parse-int parse-float]]
-   [district.ui.router.effects :as router.effects]
-   [ethlance.shared.constants :as constants]
-   [ethlance.shared.mock :as mock]
-   [ethlance.ui.event.utils :as event.utils]
-   [ethlance.ui.event.templates :as event.templates]))
-
+  (:require [district.parsers :refer [parse-float]]
+            [district.ui.router.effects :as router.effects]
+            [ethlance.ui.event.utils :as event.utils]
+            [re-frame.core :as re]))
 
 (def state-key :page.sign-up)
 (def state-default

@@ -1,37 +1,26 @@
 (ns ethlance.ui.page.sign-up
-  (:require
-   [re-frame.core :as re]
-   [taoensso.timbre :as log]
-   [cuerdas.core :as str]
-   [district.ui.component.page :refer [page]]
-   [reagent.core :as r]
-
-   ;; Re-frame Subscriptions
-   [district.ui.router.subs :as router.subs]
-
-   [ethlance.shared.enumeration.currency-type :as enum.currency]
-   [ethlance.shared.constants :as constants]
-
-   ;; Ethlance Events
-   [ethlance.ui.event.sign-up :as event.sign-up]
-   ;; Ethlance Components
-   [ethlance.ui.component.file-drag-input :refer [c-file-drag-input]]
-   [ethlance.ui.component.currency-input :refer [c-currency-input]]
-   [ethlance.ui.component.email-input :refer [c-email-input]]
-   [ethlance.ui.component.inline-svg :refer [c-inline-svg]]
-   [ethlance.ui.component.main-layout :refer [c-main-layout]]
-   [ethlance.ui.component.radio-select :refer [c-radio-select c-radio-secondary-element]]
-   [ethlance.ui.component.rating :refer [c-rating]]
-   [ethlance.ui.component.search-input :refer [c-chip-search-input]]
-   [ethlance.ui.component.tabular-layout :refer [c-tabular-layout]]
-   [ethlance.ui.component.tag :refer [c-tag c-tag-label]]
-   [ethlance.ui.component.text-input :refer [c-text-input]]
-   [ethlance.ui.component.button :refer [c-button c-button-icon-label]]
-   [ethlance.ui.component.checkbox :refer [c-labeled-checkbox]]
-   [ethlance.ui.component.textarea-input :refer [c-textarea-input]]
-   [ethlance.ui.component.select-input :refer [c-select-input]]
-   [ethlance.ui.component.icon :refer [c-icon]]))
-
+  (:require [cuerdas.core :as str]
+            [district.ui.component.page :refer [page]]
+            [ethlance.ui.subscriptions :as subs]
+            [district.ui.router.subs :as router.subs]
+            [ethlance.shared.constants :as constants]
+            [ethlance.ui.component.button :refer [c-button c-button-icon-label]]
+            [ethlance.ui.component.checkbox :refer [c-labeled-checkbox]]
+            [ethlance.ui.component.currency-input :refer [c-currency-input]]
+            [ethlance.ui.component.email-input :refer [c-email-input]]
+            [ethlance.ui.component.file-drag-input :refer [c-file-drag-input]]
+            [ethlance.ui.component.icon :refer [c-icon]]
+            [ethlance.ui.component.main-layout :refer [c-main-layout]]
+            [ethlance.ui.component.search-input :refer [c-chip-search-input]]
+            [ethlance.ui.component.select-input :refer [c-select-input]]
+            [ethlance.ui.component.tabular-layout :refer [c-tabular-layout]]
+            [ethlance.ui.component.text-input :refer [c-text-input]]
+            [ethlance.ui.component.textarea-input :refer [c-textarea-input]]
+            [ethlance.ui.event.sign-up :as event.sign-up]
+            [ethlance.ui.util.component :refer [>evt <sub]]
+            [re-frame.core :as re]
+            [reagent.core :as r]
+            [taoensso.timbre :as log]))
 
 (defn- c-upload-image []
   ;; TODO: move form-data to parent when user create functionality gets implemented
@@ -69,95 +58,105 @@
         *skills (re/subscribe [:page.sign-up/candidate-skills])
         *biography (re/subscribe [:page.sign-up/candidate-biography])
         *country (re/subscribe [:page.sign-up/candidate-country])
-        *ready-for-hire? (re/subscribe [:page.sign-up/candidate-ready-for-hire?])]
-    (fn []
-      [:div.candidate-sign-up
-       [:div.form-container
-        [:div.label "Sign Up"]
-        [:div.first-forms
-         [:div.form-image
-          [c-upload-image]]
-         [:div.form-name
-          [c-text-input
-           {:placeholder "Name"
-            :value @*full-name
-            :on-change #(re/dispatch [:page.sign-up/set-candidate-full-name %])}]]
-         [:div.form-email
-          [c-email-input
-           {:placeholder "Email"
-            :value @*email
-            :on-change #(re/dispatch [:page.sign-up/set-candidate-email %])}]]
-         [:div.form-professional-title
-          [c-text-input
-           {:placeholder "Professional Title"
-            :value @*professional-title
-            :on-change #(re/dispatch [:page.sign-up/set-candidate-professional-title %])}]]
-         [:div.form-hourly-rate
-          [c-currency-input
-           {:placeholder "Hourly Rate"
-            :color :primary
-            :min 0
-            :value @*hourly-rate
-            :on-change #(re/dispatch [:page.sign-up/set-candidate-hourly-rate %])}]]
-         [:div.form-country
-          [c-select-input
-           {:label "Select Country"
-            :selections constants/countries
-            :selection @*country
-            :on-select #(re/dispatch [:page.sign-up/set-candidate-country %])
-            :search-bar? true
-            :default-search-text "Search Countries"}]]
-         [:div.form-connect-github
-          [c-button
-           {:size :large}
-           [c-button-icon-label {:icon-name :github :label-text "Connect Github" :inline? false}]]]
-         [:div.form-connect-linkedin
-          [c-button
-           {:size :large}
-           [c-button-icon-label {:icon-name :linkedin :label-text "Connect LinkedIn" :inline? false}]]]]
-        [:div.second-forms
-         [:div.label [:h2 "Languages You Speak"]]
-         [c-chip-search-input
-          {:search-icon? false
-           :placeholder ""
-           :auto-suggestion-listing constants/languages
-           :allow-custom-chips? false
-           :chip-listing @*languages
-           :on-chip-listing-change #(re/dispatch [:page.sign-up/set-candidate-languages %])}]
+        *ready-for-hire? (re/subscribe [:page.sign-up/candidate-ready-for-hire?])
+        gh-client-id (-> (<sub [::subs/config] :github :client-id))
+        active-page (<sub [::router.subs/active-page])]
+    (r/create-class
+     {:display-name "c-candidate-sign-up"
+      :component-did-mount (fn []
+                             (when-let [code (-> active-page :query :code)]
+                                 (log/debug "I did mount" {:c code})))
+      :reagent-render
+      (fn []
+        [:div.candidate-sign-up
+         [:div.form-container
+          [:div.label "Sign Up"]
+          [:div.first-forms
+           [:div.form-image
+            [c-upload-image]]
+           [:div.form-name
+            [c-text-input
+             {:placeholder "Name"
+              :value @*full-name
+              :on-change #(re/dispatch [:page.sign-up/set-candidate-full-name %])}]]
+           [:div.form-email
+            [c-email-input
+             {:placeholder "Email"
+              :value @*email
+              :on-change #(re/dispatch [:page.sign-up/set-candidate-email %])}]]
+           [:div.form-professional-title
+            [c-text-input
+             {:placeholder "Professional Title"
+              :value @*professional-title
+              :on-change #(re/dispatch [:page.sign-up/set-candidate-professional-title %])}]]
+           [:div.form-hourly-rate
+            [c-currency-input
+             {:placeholder "Hourly Rate"
+              :color :primary
+              :min 0
+              :value @*hourly-rate
+              :on-change #(re/dispatch [:page.sign-up/set-candidate-hourly-rate %])}]]
+           [:div.form-country
+            [c-select-input
+             {:label "Select Country"
+              :selections constants/countries
+              :selection @*country
+              :on-select #(re/dispatch [:page.sign-up/set-candidate-country %])
+              :search-bar? true
+              :default-search-text "Search Countries"}]]
+           [:div.form-connect-github
+            [c-button
+             {:size :large
+              :href (str "https://github.com/login/oauth/authorize?client_id=" gh-client-id "&scope=user"
+                             "&redirect_uri=" "http://127.0.0.1:6500" active-page)}
+             [c-button-icon-label {:icon-name :github :label-text "Connect Github" :inline? false}]]]
+           [:div.form-connect-linkedin
+            [c-button
+             {:size :large}
+             [c-button-icon-label {:icon-name :linkedin :label-text "Connect LinkedIn" :inline? false}]]]]
+          [:div.second-forms
+           [:div.label [:h2 "Languages You Speak"]]
+           [c-chip-search-input
+            {:search-icon? false
+             :placeholder ""
+             :auto-suggestion-listing constants/languages
+             :allow-custom-chips? false
+             :chip-listing @*languages
+             :on-chip-listing-change #(re/dispatch [:page.sign-up/set-candidate-languages %])}]
 
-         [:div.label [:h2 "Categories You Are Interested In"]]
-         [c-chip-search-input
-          {:search-icon? false
-           :placeholder ""
-           :auto-suggestion-listing (sort constants/categories)
-           :allow-custom-chips? false
-           :chip-listing @*categories
-           :on-chip-listing-change #(re/dispatch [:page.sign-up/set-candidate-categories %])
-           :display-listing-on-focus? true}]
+           [:div.label [:h2 "Categories You Are Interested In"]]
+           [c-chip-search-input
+            {:search-icon? false
+             :placeholder ""
+             :auto-suggestion-listing (sort constants/categories)
+             :allow-custom-chips? false
+             :chip-listing @*categories
+             :on-chip-listing-change #(re/dispatch [:page.sign-up/set-candidate-categories %])
+             :display-listing-on-focus? true}]
 
-         [:div.label [:h2 "Your Skills "] [:i "(Choose at least one skill)"]]
-         [c-chip-search-input
-          {:search-icon? false
-           :placeholder ""
-           :allow-custom-chips? false
-           :auto-suggestion-listing constants/skills
-           :chip-listing @*skills
-           :on-chip-listing-change #(re/dispatch [:page.sign-up/set-candidate-skills %])}]
+           [:div.label [:h2 "Your Skills "] [:i "(Choose at least one skill)"]]
+           [c-chip-search-input
+            {:search-icon? false
+             :placeholder ""
+             :allow-custom-chips? false
+             :auto-suggestion-listing constants/skills
+             :chip-listing @*skills
+             :on-chip-listing-change #(re/dispatch [:page.sign-up/set-candidate-skills %])}]
 
-         [:div.label [:h2 "Your Biography"]]
-         [c-textarea-input
-          {:placeholder ""
-           :value @*biography
-           :on-change #(re/dispatch [:page.sign-up/set-candidate-biography %])}]
-         [c-labeled-checkbox
-          {:id "form-for-hire"
-           :label "I'm available for hire"
-           :checked? @*ready-for-hire?
-           :on-change #(re/dispatch [:page.sign-up/set-candidate-ready-for-hire? %])}]]]
+           [:div.label [:h2 "Your Biography"]]
+           [c-textarea-input
+            {:placeholder ""
+             :value @*biography
+             :on-change #(re/dispatch [:page.sign-up/set-candidate-biography %])}]
+           [c-labeled-checkbox
+            {:id "form-for-hire"
+             :label "I'm available for hire"
+             :checked? @*ready-for-hire?
+             :on-change #(re/dispatch [:page.sign-up/set-candidate-ready-for-hire? %])}]]]
 
-       [:div.form-submit
-        [:span "Create"]
-        [c-icon {:name :ic-arrow-right :size :smaller}]]])))
+         [:div.form-submit
+          [:span "Create"]
+          [c-icon {:name :ic-arrow-right :size :smaller}]]])})))
 
 
 (defn c-employer-sign-up []

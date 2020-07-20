@@ -35,7 +35,7 @@
         (mount/start))
 
     ;; Initialize our re-frame app state
-    (re/dispatch-sync [:ethlance/initialize])
+    (re/dispatch-sync [:ethlance/initialize main-config])
 
     ::started))
 

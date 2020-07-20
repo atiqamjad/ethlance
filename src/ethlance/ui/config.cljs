@@ -32,7 +32,12 @@
    {:schema graphql.schema/schema
     ;; :url "http://localhost:4000/graphql"
     :url "http://192.168.0.111:4000/graphql"
-    :jwt-sign-secret "SECRET"}})
+    :jwt-sign-secret "SECRET"}
+
+   :github
+   {:client-id "83e6a6043ca4ae50f8b0"}
+
+   })
 
 
 (def development-config

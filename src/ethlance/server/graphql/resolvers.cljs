@@ -475,17 +475,13 @@
 
 (defn create-job-proposal-mutation [_ {:keys [:job/id :text :rate :rate-currency-id]} {:keys [:config :current-user :timestamp]}]
   (db/with-async-resolver-tx conn
-   (if (:user/address current-user)
-
-     (<? (ethlance-db/add-message conn {:message/type :job-story-message
-                                        :job-story-message/type :proposal
-                                        :message/date-created timestamp
-                                        :message/creator (:user/address current-user)
-                                        :message/text text
-                                        :ethlance-job-story/proposal-rate rate
-                                        :ethlance-job-story/proposal-rate-currency-id rate-currency-id}))
-
-     (throw (js/Error. "Unauthorized")))))
+   (<? (ethlance-db/add-message conn {:message/type :job-story-message
+                                      :job-story-message/type :proposal
+                                      :message/date-created timestamp
+                                      :message/creator (:user/address current-user)
+                                      :message/text text
+                                      :ethlance-job-story/proposal-rate rate
+                                      :ethlance-job-story/proposal-rate-currency-id rate-currency-id}))))
 
 (defn replay-events [_ _ _]
   (db/with-async-resolver-tx conn
@@ -540,6 +536,6 @@
                                :updateEmployer update-employer-mutation,
                                :updateCandidate update-candidate-mutation,
                                :updateArbiter update-arbiter-mutation
-                               :createJobProposal create-job-proposal-mutation
+                               :createJobProposal (require-auth create-job-proposal-mutation)
                                :replayEvents replay-events
                                }})
