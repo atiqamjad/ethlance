@@ -43,24 +43,52 @@
    :arbiter/biography nil
    :arbiter/country nil})
 
+(re/reg-event-fx
+ :page.sign-up/initial-query
+ (fn [{:keys [db]} _]
+   (let [user-address (accounts-queries/active-account db)]
 
-(defn initialize-page
-  "Event FX Handler. Setup listener to dispatch an event when the page is active/visited."
-  [{:keys [db]} _]
-  (let [page-state (get db state-key)]
-    {::router.effects/watch-active-page
-     [{:id :page.sign-up/initialize-page
-       :name :route.me/sign-up
-       :dispatch []}]}))
+     (log/debug "@@@ initial query" {:a user-address})
 
+     {:dispatch [::graphql/query {:query
+                                  "query user($address: ID!) {
+                                     user(user_address: $address) {
+                                       user_email
+                                     }
+                                   }"
+                                  :variables {:user {:address user-address}}
+                                  :on-success #(log/debug "initial query success" {:r %} )
+                                  :on-failure #(>evt [:page.sign-up/deregister-account-loaded-forwarder])}]})))
 
 ;;
 ;; Registered Events
 ;;
 (def create-assoc-handler (partial event.utils/create-assoc-handler state-key))
 
+(re/reg-event-fx
+ :page.sign-up/initialize-page
+ (fn [{:keys [db]} _]
 
-(re/reg-event-fx :page.sign-up/initialize-page initialize-page)
+     (log/debug "@@@  :page.sign-up/initialize-page")
+
+(let [user-address (accounts-queries/active-account db)]
+
+     (log/debug "@@@ initial query" {:a user-address})
+
+     {:dispatch [::graphql/query {:query
+                                  "query user($address: ID!) {
+                                     user(user_address: $address) {
+                                       user_email
+                                     }
+                                   }"
+                                  :variables {:user {:address user-address}}
+                                  :on-success #(log/debug "initial query success" {:r %} )
+                                  :on-failure #(>evt [:page.sign-up/deregister-account-loaded-forwarder])}]})
+
+   ))
+
+
+
 (re/reg-event-fx :page.sign-up/set-candidate-full-name (create-assoc-handler :candidate/full-name))
 (re/reg-event-fx :page.sign-up/set-candidate-professional-title (create-assoc-handler :candidate/professional-title))
 (re/reg-event-fx :page.sign-up/set-candidate-email (create-assoc-handler :candidate/email))

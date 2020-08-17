@@ -652,28 +652,30 @@
                                       :where where-clause})))))
      (log/error (str/format "Unable to find table schema for '%s'" table-name)))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Application leve db access ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Application level db access ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn upsert-user! [conn user]
   (safe-go
-   (let [values (select-keys user (get-table-column-names :Users))]
-     (<? (db/run! conn {:insert-into :Users
-                        :values [values]
-                        :upsert {:on-conflict [:user/address]
-                                 :do-update-set (keys values)}}))
+   (let [values (select-keys user (get-table-column-names :Users))
+         _ (<? (db/run! conn {:insert-into :Users
+                              :values [values]
+                              :upsert {:on-conflict [:user/address]
+                                       :do-update-set (keys values)}}))
+         _ (log/debug "@@@ upsert-user!" {:_ _
+                                          :user user})]
      (case (:user/type user)
-       :arbiter   (let [arbiter (select-keys user (get-table-column-names :Arbiter))]
-                    (<? (db/run! conn {:insert-into :Arbiter
-                                       :values [arbiter]
-                                       :upsert {:on-conflict [:user/address]
-                                                :do-update-set (keys arbiter)}})))
-       :employer  (let [employer (select-keys user (get-table-column-names :Employer))]
-                    (<? (db/run! conn {:insert-into :Employer
-                                       :values [employer]
-                                       :upsert {:on-conflict [:user/address]
-                                                :do-update-set (keys employer)}})))
+       :arbiter (let [arbiter (select-keys user (get-table-column-names :Arbiter))]
+                  (<? (db/run! conn {:insert-into :Arbiter
+                                     :values [arbiter]
+                                     :upsert {:on-conflict [:user/address]
+                                              :do-update-set (keys arbiter)}})))
+       :employer (let [employer (select-keys user (get-table-column-names :Employer))]
+                   (<? (db/run! conn {:insert-into :Employer
+                                      :values [employer]
+                                      :upsert {:on-conflict [:user/address]
+                                               :do-update-set (keys employer)}})))
        :candidate (let [candidate (select-keys user (get-table-column-names :Candidate))]
                     (<? (db/run! conn {:insert-into :Candidate
                                        :values [candidate]

@@ -85,7 +85,13 @@
                  [district0x/district-ui-notification "1.0.1"]
                  [district0x/district-ui-now "1.0.2"]
                  [district0x/district-ui-reagent-render "1.0.1"]
-                 [district0x/district-ui-router "1.0.7"]
+
+                 ;; [district0x/district-ui-router "1.0.7"]
+                 [funcool/cuerdas "2.2.0"]
+                 [district0x/bide "1.6.1"]
+                 ;; [day8.re-frame/async-flow-fx "0.1.0"]
+                 [district0x/re-frame-window-fx "1.0.2"]
+
                  [district0x/district-ui-router-google-analytics "1.0.1"]
                  [district0x/district-ui-smart-contracts "1.0.8"]
                  [district0x/district-ui-web3 "1.3.2"]
@@ -116,7 +122,8 @@
   :exclusions [cljsjs/react-with-addons
                honeysql
                reagent
-               mount]
+               mount
+               district0x/district-ui-router]
   :profiles
   {:dev
    {:source-paths ["src" "test" "dev"]
@@ -146,7 +153,7 @@
   :cljsbuild
   {:builds
    [{:id "dev-ui"
-     :source-paths ["src/ethlance/ui" "src/ethlance/shared" "dev/ui"]
+     :source-paths ["src/ethlance/ui" "src/ethlance/shared" "dev/ui" "src/district/ui"]
      :figwheel {:websocket-host :js-client-host
                 :on-jsload "district.ui.reagent-render/rerender"}
      :compiler {:main ethlance.ui.core

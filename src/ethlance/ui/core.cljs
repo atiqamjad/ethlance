@@ -22,7 +22,6 @@
 
 (defn ^:export init []
   (let [main-config (ui.config/get-config)]
-    (.log js/console "Initializing...")
     (.log js/console (clj->js main-config))
     (util.injection/inject-data-scroll! {:injection-selector "#app"})
 
