@@ -121,6 +121,7 @@
   }
 
   input githubSignUpInput {
+   user_address: ID!
    code: String!
   }
 

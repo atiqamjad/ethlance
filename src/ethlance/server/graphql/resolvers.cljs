@@ -490,8 +490,9 @@
 ;; request data
 ;; store it server side in db
 ;; handle reply (UI side)
-(defn github-signup-mutation [_ {:keys [input] :as all} {:keys [config]}]
-  (let [{:keys [code]} input
+(defn github-signup-mutation [_ {:keys [input]} {:keys [config]}]
+  (let [{:keys [code]
+         :user/keys [address]} input
         {:keys [client-id client-secret] } (:github config)]
     (promise-> (axios (clj->js {:url "https://github.com/login/oauth/access_token"
                                 :method :post
@@ -499,16 +500,28 @@
                                           "Accept" "application/json"}
                                 :data (js/JSON.stringify (clj->js {:client_id client-id
                                                                    :client_secret client-secret
+                                                                   :scope "user"
                                                                    :code code}))}))
                (fn [response]
                  (let [{:keys [data]} (js->clj response :keywordize-keys true)
                        access-token (-> data (string/split "&") first (string/split "=") second)]
 
-                   (log/debug "### github-signup-mutation" {:d access-token
-                                                            :client-id client-id
-                                                            :client-secret client-secret}))
+                   (log/debug "@@@ github-signup-mutation" {:token access-token})
 
-                 ))))
+                   (axios (clj->js {:url "https://api.github.com/user"
+                                    :method :get
+                                    :headers {"Authorization" (str "token " access-token)
+                                              "Content-Type" "application/json"
+                                              "Accept" "application/json"}}))))
+
+               (fn [response]
+                 (let [user (js->clj response :keywordize-keys true)]
+
+                   (log/debug "@@@ github-signup-mutation" {;;:u user
+                                                            :input input
+                                                            :address address})
+
+                   )))))
 
 (defn replay-events [_ _ _]
   (db/with-async-resolver-tx conn

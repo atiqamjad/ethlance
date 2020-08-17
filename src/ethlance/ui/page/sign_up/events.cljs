@@ -1,5 +1,8 @@
 (ns ethlance.ui.page.sign-up.events
   (:require [district.parsers :refer [parse-float]]
+            [ethlance.ui.util.component :refer [>evt]]
+            [district.ui.web3-accounts.events :as accounts-events]
+            [district.ui.web3-accounts.queries :as accounts-queries]
             [district.ui.router.effects :as router.effects]
             [ethlance.ui.event.utils :as event.utils]
             [ethlance.ui.graphql :as graphql]
@@ -92,14 +95,32 @@
 
 
 (re/reg-event-fx
- :page.sign-up/send-github-verification-code
+ :page.sign-up/github-sign-up
  (fn [{:keys [db] :as cofx} [_ code]]
-   {:dispatch [::graphql/query {:query
-                                "mutation githubSignUp($githubSignUpInput: githubSignUpInput!) {
+   (let [user-address (accounts-queries/active-account db)]
+     {:dispatch [::graphql/query {:query
+                                  "mutation githubSignUp($githubSignUpInput: githubSignUpInput!) {
                                    githubSignUp(input: $githubSignUpInput) {
                                      todo
                                    }
                                  }"
-                                :variables {:githubSignUpInput {:code code}}
-                                :on-success #(log/info "that worked")
-                                }]}))
+                                  :variables {:githubSignUpInput {:code code :user_address user-address}}
+
+                                  ;; de-register
+                                  :on-success #(>evt [:page.sign-up/deregister-account-loaded-forwarder])
+                                  :on-failure #(>evt [:page.sign-up/deregister-account-loaded-forwarder])
+                                  }]})))
+
+;; TODO
+(re/reg-event-fx
+ :page.sign-up/send-github-verification-code
+ (fn [{:keys [db] :as cofx} [_ code]]
+   {:forward-events
+    {:register :account-loaded?
+     :events #{::accounts-events/accounts-changed}
+     :dispatch-to [:page.sign-up/github-sign-up code]}}))
+
+(re/reg-event-fx
+ :page.sign-up/deregister-account-loaded-forwarder
+ (fn []
+   {:forward-events {:unregister :account-loaded?}}))
