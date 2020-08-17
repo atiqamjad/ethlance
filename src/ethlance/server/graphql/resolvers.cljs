@@ -491,9 +491,7 @@
 (defn github-signup-mutation [_ {:keys [input]} {:keys [config]}]
   (db/with-async-resolver-conn conn
     (let [{:keys [code]
-           :user/keys [address type]
-           ;; :or {type :candidate}
-           } input
+           :user/keys [address type]} input
           {:keys [client-id client-secret]} (:github config)
           response
           (<? (axios (clj->js {:url "https://github.com/login/oauth/access_token"

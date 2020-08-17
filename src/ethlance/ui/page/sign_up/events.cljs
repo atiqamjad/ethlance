@@ -84,7 +84,7 @@
 
 (re/reg-event-fx
  :page.sign-up/initialize-page
- (fn [{:keys [db]} _]
+ (fn []
    {:forward-events
     {:register ::accounts-loaded?
      :events #{::accounts-events/accounts-changed}
@@ -93,13 +93,26 @@
 ;; TODO : handle response (reduce-handlers)
 (re/reg-event-fx
  :page.sign-up/initial-query
- (fn [{:keys [db]} _]
+ (fn [{:keys [db]}]
    (let [user-address (accounts-queries/active-account db)]
+     ;; TODO : query user, candidate, employer and arbiter + fields needed by components
      {:dispatch [::graphql/query {:query
-                                  "query ($address: ID!) {
+                                  "query InitialQuery($address: ID!) {
                                      user(user_address: $address) {
                                        user_address
                                        user_email
+                                     }
+                                     candidate(user_address: $address) {
+                                       user_address
+                                       candidate_bio
+                                     }
+                                     employer(user_address: $address) {
+                                       user_address
+                                       employer_professionalTitle
+                                     }
+                                     arbiter(user_address: $address) {
+                                       user_address
+                                       arbiter_bio
                                      }
                                    }"
                                   :variables {:address user-address}
@@ -110,7 +123,7 @@
 ;; TODO : handle response
 (re/reg-event-fx
  :page.sign-up/send-github-verification-code
- (fn [{:keys [db]} [_ code user-type]]
+ (fn [_ [_ code user-type]]
    {:forward-events
     {:register ::initial-query?
      :events #{:page.sign-up/initial-query}
@@ -121,11 +134,16 @@
  (fn [{:keys [db]} [_  code user-type]]
    (let [user-address (accounts-queries/active-account db)]
      {:dispatch [::graphql/query {:query
-                                  "mutation githubSignUp($githubSignUpInput: githubSignUpInput!) {
-                                   githubSignUp(input: $githubSignUpInput) {
-                                     todo
+                                  "mutation GithubSignUp($githubSignUpInput: githubSignUpInput!) {
+                                     githubSignUp(input: $githubSignUpInput) {
+                                       todo
                                    }
                                  }"
                                   :variables {:githubSignUpInput {:code code :user_address user-address :user_type user-type}}
-                                  :on-success #(prn "")
+                                  :on-success #(>evt [::unregister-initial-query-forwarder])
                                   :on-failure #(prn "")}]})))
+
+(re/reg-event-fx
+ ::unregister-initial-query-forwarder
+ (fn []
+   {:forward-events {:unregister ::initial-query?}}))
