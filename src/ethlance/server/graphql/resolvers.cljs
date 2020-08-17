@@ -9,7 +9,7 @@
             [district.graphql-utils :as graphql-utils]
             [honeysql.core :as sql]
             [honeysql.helpers :as sql-helpers]
-            [taoensso.timbre :as log :refer [spy]]
+            [taoensso.timbre :as log]
             [ethlance.server.event-replay-queue :as replay-queue]
             [ethlance.server.syncer :as syncer]))
 
@@ -486,42 +486,51 @@
                                       :ethlance-job-story/proposal-rate rate
                                       :ethlance-job-story/proposal-rate-currency-id rate-currency-id}))))
 
-;; TODO : obtain access token
-;; request data
-;; store it server side in db
-;; handle reply (UI side)
+;; TODO : store user data server side
+;; TODO : handle reply (UI side)
 (defn github-signup-mutation [_ {:keys [input]} {:keys [config]}]
-  (let [{:keys [code]
-         :user/keys [address]} input
-        {:keys [client-id client-secret] } (:github config)]
-    (promise-> (axios (clj->js {:url "https://github.com/login/oauth/access_token"
-                                :method :post
-                                :headers {"Content-Type" "application/json"
-                                          "Accept" "application/json"}
-                                :data (js/JSON.stringify (clj->js {:client_id client-id
-                                                                   :client_secret client-secret
-                                                                   :scope "user"
-                                                                   :code code}))}))
-               (fn [response]
-                 (let [{:keys [data]} (js->clj response :keywordize-keys true)
-                       access-token (-> data (string/split "&") first (string/split "=") second)]
+  (db/with-async-resolver-conn conn
+    (let [{:keys [code]
+           :user/keys [address type]
+           ;; :or {type :candidate}
+           } input
+          {:keys [client-id client-secret]} (:github config)
+          response
+          (<? (axios (clj->js {:url "https://github.com/login/oauth/access_token"
+                               :method :post
+                               :headers {"Content-Type" "application/json"
+                                         "Accept" "application/json"}
+                               :data (js/JSON.stringify (clj->js {:client_id client-id
+                                                                  :client_secret client-secret
+                                                                  :scope "user"
+                                                                  :code code}))})))
+          {:keys [data]} (js->clj response :keywordize-keys true)
+          access-token (-> data (string/split "&") first (string/split "=") second)
+          response
+          (<? (axios (clj->js {:url "https://api.github.com/user"
+                               :method :get
+                               :headers {"Authorization" (str "token " access-token)
+                                         "Content-Type" "application/json"
+                                         "Accept" "application/json"}})))
+          {:keys [login email]} (:data (js->clj response :keywordize-keys true))
 
-                   (log/debug "@@@ github-signup-mutation" {:token access-token})
+          user {:user/address address
+                :user/type (keyword type)
+                :user/email email
+                :user/github-username login}
 
-                   (axios (clj->js {:url "https://api.github.com/user"
-                                    :method :get
-                                    :headers {"Authorization" (str "token " access-token)
-                                              "Content-Type" "application/json"
-                                              "Accept" "application/json"}}))))
+          _ (log/debug "@@@ user" {:u user})
 
-               (fn [response]
-                 (let [user (js->clj response :keywordize-keys true)]
+          result
+          (<? (ethlance-db/upsert-user! conn user))
 
-                   (log/debug "@@@ github-signup-mutation" {;;:u user
-                                                            :input input
-                                                            :address address})
+          _ (log/debug "@@@ upsert" {:r result})
 
-                   )))))
+          ]
+
+      true
+
+      )))
 
 (defn replay-events [_ _ _]
   (db/with-async-resolver-tx conn

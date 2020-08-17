@@ -93,10 +93,13 @@
 (re/reg-event-fx :page.sign-up/set-arbiter-biography (create-assoc-handler :arbiter/biography))
 (re/reg-event-fx :page.sign-up/set-arbiter-country (create-assoc-handler :arbiter/country))
 
-
+;; TODO
 (re/reg-event-fx
  :page.sign-up/github-sign-up
- (fn [{:keys [db] :as cofx} [_ code]]
+ (fn [{:keys [db] :as cofx} [_ code user-type]]
+
+   (log/debug "github-sign-up" {:t user-type})
+
    (let [user-address (accounts-queries/active-account db)]
      {:dispatch [::graphql/query {:query
                                   "mutation githubSignUp($githubSignUpInput: githubSignUpInput!) {
@@ -104,21 +107,17 @@
                                      todo
                                    }
                                  }"
-                                  :variables {:githubSignUpInput {:code code :user_address user-address}}
-
-                                  ;; de-register
+                                  :variables {:githubSignUpInput {:code code :user_address user-address :user_type user-type}}
                                   :on-success #(>evt [:page.sign-up/deregister-account-loaded-forwarder])
-                                  :on-failure #(>evt [:page.sign-up/deregister-account-loaded-forwarder])
-                                  }]})))
+                                  :on-failure #(>evt [:page.sign-up/deregister-account-loaded-forwarder])}]})))
 
-;; TODO
 (re/reg-event-fx
  :page.sign-up/send-github-verification-code
- (fn [{:keys [db] :as cofx} [_ code]]
+ (fn [{:keys [db] :as cofx} [_ code user-type]]
    {:forward-events
     {:register :account-loaded?
      :events #{::accounts-events/accounts-changed}
-     :dispatch-to [:page.sign-up/github-sign-up code]}}))
+     :dispatch-to [:page.sign-up/github-sign-up code user-type]}}))
 
 (re/reg-event-fx
  :page.sign-up/deregister-account-loaded-forwarder

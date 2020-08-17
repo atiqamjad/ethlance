@@ -122,6 +122,7 @@
 
   input githubSignUpInput {
    user_address: ID!
+   user_type: String!
    code: String!
   }
 
@@ -137,7 +138,6 @@
     updateArbiter(arbiter: ArbiterInput!): Boolean!,
     createJobProposal(job_id: Int!, text: String!, rate: Int!, rateCurrencyId: String!): Boolean!,
     replayEvents: Boolean!,
-
     githubSignUp(input: githubSignUpInput!): githubSignUpPayload!
 
   }

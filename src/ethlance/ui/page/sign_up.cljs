@@ -67,7 +67,7 @@
      {:display-name "c-candidate-sign-up"
       :component-did-mount (fn []
                              (when-let [code (-> active-page :query :code)]
-                               (>evt [:page.sign-up/send-github-verification-code code])))
+                               (>evt [:page.sign-up/send-github-verification-code code "candidate"])))
       :reagent-render
       (fn []
         [:div.candidate-sign-up
