@@ -43,51 +43,11 @@
    :arbiter/biography nil
    :arbiter/country nil})
 
-(re/reg-event-fx
- :page.sign-up/initial-query
- (fn [{:keys [db]} _]
-   (let [user-address (accounts-queries/active-account db)]
-
-     (log/debug "@@@ initial query" {:a user-address})
-
-     {:dispatch [::graphql/query {:query
-                                  "query user($address: ID!) {
-                                     user(user_address: $address) {
-                                       user_email
-                                     }
-                                   }"
-                                  :variables {:user {:address user-address}}
-                                  :on-success #(log/debug "initial query success" {:r %} )
-                                  :on-failure #(>evt [:page.sign-up/deregister-account-loaded-forwarder])}]})))
 
 ;;
 ;; Registered Events
 ;;
 (def create-assoc-handler (partial event.utils/create-assoc-handler state-key))
-
-(re/reg-event-fx
- :page.sign-up/initialize-page
- (fn [{:keys [db]} _]
-
-     (log/debug "@@@  :page.sign-up/initialize-page")
-
-(let [user-address (accounts-queries/active-account db)]
-
-     (log/debug "@@@ initial query" {:a user-address})
-
-     {:dispatch [::graphql/query {:query
-                                  "query user($address: ID!) {
-                                     user(user_address: $address) {
-                                       user_email
-                                     }
-                                   }"
-                                  :variables {:user {:address user-address}}
-                                  :on-success #(log/debug "initial query success" {:r %} )
-                                  :on-failure #(>evt [:page.sign-up/deregister-account-loaded-forwarder])}]})
-
-   ))
-
-
 
 (re/reg-event-fx :page.sign-up/set-candidate-full-name (create-assoc-handler :candidate/full-name))
 (re/reg-event-fx :page.sign-up/set-candidate-professional-title (create-assoc-handler :candidate/professional-title))
@@ -121,13 +81,36 @@
 (re/reg-event-fx :page.sign-up/set-arbiter-biography (create-assoc-handler :arbiter/biography))
 (re/reg-event-fx :page.sign-up/set-arbiter-country (create-assoc-handler :arbiter/country))
 
-;; TODO
+;; TODO : finish event flow
+
 (re/reg-event-fx
- :page.sign-up/github-sign-up
- (fn [{:keys [db] :as cofx} [_ code user-type]]
+ :page.sign-up/initialize-page
+ (fn [{:keys [db]} _]
+   {:forward-events
+    {:register :account-loaded?
+     :events #{::accounts-events/accounts-changed}
+     :dispatch-to [:page.sign-up/initial-query]}}))
 
-   (log/debug "github-sign-up" {:t user-type})
+(re/reg-event-fx
+ :page.sign-up/initial-query
+ (fn [{:keys [db]} _]
+   (let [user-address (accounts-queries/active-account db)]
+     {:dispatch [::graphql/query {:query
+                                  "query ($address: ID!) {
+                                     user(user_address: $address) {
+                                       user_address
+                                       user_email
+                                     }
+                                   }"
+                                  :variables {:address user-address}
+                                  :on-success #(log/debug "initial query success" {:r %} )
+                                  :on-failure #(log/error "initial query error" {:r %})
+                                  }]})))
 
+;; TODO : handle response
+(re/reg-event-fx
+ :page.sign-up/send-github-verification-code
+ (fn [{:keys [db]} [_ code user-type]]
    (let [user-address (accounts-queries/active-account db)]
      {:dispatch [::graphql/query {:query
                                   "mutation githubSignUp($githubSignUpInput: githubSignUpInput!) {
@@ -136,18 +119,5 @@
                                    }
                                  }"
                                   :variables {:githubSignUpInput {:code code :user_address user-address :user_type user-type}}
-                                  :on-success #(>evt [:page.sign-up/deregister-account-loaded-forwarder])
-                                  :on-failure #(>evt [:page.sign-up/deregister-account-loaded-forwarder])}]})))
-
-(re/reg-event-fx
- :page.sign-up/send-github-verification-code
- (fn [{:keys [db] :as cofx} [_ code user-type]]
-   {:forward-events
-    {:register :account-loaded?
-     :events #{::accounts-events/accounts-changed}
-     :dispatch-to [:page.sign-up/github-sign-up code user-type]}}))
-
-(re/reg-event-fx
- :page.sign-up/deregister-account-loaded-forwarder
- (fn []
-   {:forward-events {:unregister :account-loaded?}}))
+                                  :on-success #(prn "")
+                                  :on-failure #(prn "")}]})))
