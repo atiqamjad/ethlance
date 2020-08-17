@@ -43,7 +43,6 @@
    :arbiter/biography nil
    :arbiter/country nil})
 
-
 ;;
 ;; Registered Events
 ;;
@@ -87,10 +86,11 @@
  :page.sign-up/initialize-page
  (fn [{:keys [db]} _]
    {:forward-events
-    {:register :account-loaded?
+    {:register ::accounts-loaded?
      :events #{::accounts-events/accounts-changed}
      :dispatch-to [:page.sign-up/initial-query]}}))
 
+;; TODO : handle response (reduce-handlers)
 (re/reg-event-fx
  :page.sign-up/initial-query
  (fn [{:keys [db]} _]
@@ -111,6 +111,14 @@
 (re/reg-event-fx
  :page.sign-up/send-github-verification-code
  (fn [{:keys [db]} [_ code user-type]]
+   {:forward-events
+    {:register ::initial-query?
+     :events #{:page.sign-up/initial-query}
+     :dispatch-to [:page.sign-up/github-sign-up code user-type]}}))
+
+(re/reg-event-fx
+ :page.sign-up/github-sign-up
+ (fn [{:keys [db]} [_  code user-type]]
    (let [user-address (accounts-queries/active-account db)]
      {:dispatch [::graphql/query {:query
                                   "mutation githubSignUp($githubSignUpInput: githubSignUpInput!) {
