@@ -61,7 +61,7 @@
         *ready-for-hire? (re/subscribe [:page.sign-up/candidate-ready-for-hire?])
         config (<sub [::subs/config])
         root-url (-> (config :root-url))
-        gh-client-id (-> (config :github :client-id))
+        gh-client-id (-> config :github :client-id)
         active-page (<sub [::router.subs/active-page])]
     (r/create-class
      {:display-name "c-candidate-sign-up"
@@ -110,7 +110,8 @@
             [c-button
              {:size :large
               :href (str "https://github.com/login/oauth/authorize?client_id=" gh-client-id "&scope=user"
-                             "&redirect_uri=" root-url active-page)}
+                             ;; "&redirect_uri=" root-url
+                             active-page)}
              [c-button-icon-label {:icon-name :github :label-text "Connect Github" :inline? false}]]]
            [:div.form-connect-linkedin
             [c-button

@@ -1,7 +1,8 @@
 (ns ethlance.server.graphql.resolvers
   (:require [cljs.nodejs :as nodejs]
+            [clojure.string :as string]
             [district.server.async-db :as db :include-macros true]
-            [district.shared.async-helpers :refer [safe-go <?]]
+            [district.shared.async-helpers :refer [safe-go <? promise->]]
             [ethlance.server.graphql.authorization :as authorization]
             [district.shared.error-handling :refer [try-catch-throw]]
             [ethlance.server.db :as ethlance-db]
@@ -11,6 +12,8 @@
             [taoensso.timbre :as log :refer [spy]]
             [ethlance.server.event-replay-queue :as replay-queue]
             [ethlance.server.syncer :as syncer]))
+
+(def axios (js/require "axios"))
 
 (defn- paged-query
   [conn query limit offset]
@@ -486,12 +489,26 @@
 ;; TODO : obtain access token
 ;; request data
 ;; store it server side in db
-(defn github-signup-mutation [_ {:keys [input] :as all} _]
-  (let [{:keys [code]} input]
+;; handle reply (UI side)
+(defn github-signup-mutation [_ {:keys [input] :as all} {:keys [config]}]
+  (let [{:keys [code]} input
+        {:keys [client-id client-secret] } (:github config)]
+    (promise-> (axios (clj->js {:url "https://github.com/login/oauth/access_token"
+                                :method :post
+                                :headers {"Content-Type" "application/json"
+                                          "Accept" "application/json"}
+                                :data (js/JSON.stringify (clj->js {:client_id client-id
+                                                                   :client_secret client-secret
+                                                                   :code code}))}))
+               (fn [response]
+                 (let [{:keys [data]} (js->clj response :keywordize-keys true)
+                       access-token (-> data (string/split "&") first (string/split "=") second)]
 
-    (log/debug "github-signup-mutation" {:c code})
+                   (log/debug "### github-signup-mutation" {:d access-token
+                                                            :client-id client-id
+                                                            :client-secret client-secret}))
 
-    ))
+                 ))))
 
 (defn replay-events [_ _ _]
   (db/with-async-resolver-tx conn

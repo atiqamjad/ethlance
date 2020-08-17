@@ -42,3 +42,5 @@
                         (on-error (js->clj (.-data response) :keywordize-keys true))
                         (log/error "Error during query" {:response response}))))]
      {::query [params callback]})))
+
+;; TODO : dispatch handlers
