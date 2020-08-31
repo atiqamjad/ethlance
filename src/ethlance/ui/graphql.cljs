@@ -96,28 +96,21 @@
 
 ;; TODO : normalize user
 (defmethod handler :user
-  [{:keys [db] :as cofx} user-ident {:user/keys [email] :as user}]
+  [{:keys [db] :as cofx} _ {:user/keys [address email] :as user}]
 
-  (log/debug "user handler" {:u user
-                             :ident user-ident})
+  (log/debug "user handler" {:u user})
 
-  {:db (-> db (assoc :fubar :bar))}
+  {:db (assoc-in db [:users address] user)}
 
   )
-
 
 #_(defmethod handler :user/address
-  [{:keys [db] :as cofx} user-ident address]
-
-  (log/debug "user_address handler" {:a address
-                                     :ident user-ident})
-
-  {:db (-> db (assoc :fu :bar))}
-
-  )
+  [{:keys [db] :as cofx} _ address]
+  (log/debug "user/address handler" {:a address})
+  {:db (-> db (assoc :fu :bar))})
 
 #_(defmethod handler :user/email
-  [{:keys [db] :as cofx} user-ident {:user/keys [email] :as user}]
+  [{:keys [db] :as cofx} _ {:user/keys [email] :as user}]
   (log/debug "user_email handler" {:cofx cofx})
   {:db db})
 

@@ -3,6 +3,7 @@
             [district.ui.component.page :refer [page]]
             [ethlance.ui.subscriptions :as subs]
             [district.ui.router.subs :as router.subs]
+            [district.ui.web3-accounts.subs :as accounts-subs]
             [ethlance.shared.constants :as constants]
             [ethlance.ui.component.button :refer [c-button c-button-icon-label]]
             [ethlance.ui.component.checkbox :refer [c-labeled-checkbox]]
@@ -45,6 +46,9 @@
                                                (log/warn "Rejected file" {:name name :type type :size size} ::file-rejected))}]])))
 
 
+;; TODO : use forms lib
+;; TODO : populate from subs
+
 (defn c-candidate-sign-up
   []
   (let [*full-name (re/subscribe [:page.sign-up/candidate-full-name])
@@ -60,9 +64,13 @@
         *country (re/subscribe [:page.sign-up/candidate-country])
         *ready-for-hire? (re/subscribe [:page.sign-up/candidate-ready-for-hire?])
         config (<sub [::subs/config])
-        root-url (-> (config :root-url))
+
+        {:user/keys [email github-username] :as user} (<sub [::subs/user])
+
+        ;; root-url (-> (config :root-url))
         gh-client-id (-> config :github :client-id)
-        active-page (<sub [::router.subs/active-page])]
+        active-page (<sub [::router.subs/active-page])
+        ]
     (r/create-class
      {:display-name "c-candidate-sign-up"
       :component-did-mount (fn []
@@ -70,6 +78,9 @@
                                (>evt [:page.sign-up/send-github-verification-code code "candidate"])))
       :reagent-render
       (fn []
+
+        (log/debug "@@@ render" {:user user})
+
         [:div.candidate-sign-up
          [:div.form-container
           [:div.label "Sign Up"]

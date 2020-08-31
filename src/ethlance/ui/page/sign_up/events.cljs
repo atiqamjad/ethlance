@@ -98,6 +98,7 @@
                                      user(user_address: $address) {
                                        user_address
                                        user_email
+                                       user_githubUsername
                                      }
                                      candidate(user_address: $address) {
                                        user_address

@@ -156,6 +156,8 @@
     \"Full Name of the Given User\"
     user_fullName: String
 
+    user_githubUsername: String
+
     \"The short-form username of the User\"
     user_userName: String
 
