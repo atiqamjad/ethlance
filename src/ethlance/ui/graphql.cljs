@@ -89,7 +89,7 @@
                                 :cofx cofx})
   (reduce-handlers cofx values))
 
-;; TODO
+;; TODO : normalize user
 (defmethod handler :user
   [{:keys [db] :as cofx} user-ident {:user/keys [email] :as user}]
 

@@ -80,8 +80,6 @@
 (re/reg-event-fx :page.sign-up/set-arbiter-biography (create-assoc-handler :arbiter/biography))
 (re/reg-event-fx :page.sign-up/set-arbiter-country (create-assoc-handler :arbiter/country))
 
-;; TODO : finish event flow
-
 (re/reg-event-fx
  :page.sign-up/initialize-page
  (fn []
@@ -90,7 +88,6 @@
      :events #{::accounts-events/accounts-changed}
      :dispatch-to [:page.sign-up/initial-query]}}))
 
-;; TODO : handle response (reduce-handlers)
 (re/reg-event-fx
  :page.sign-up/initial-query
  (fn [{:keys [db]}]
@@ -126,6 +123,7 @@
      :events #{:page.sign-up/initial-query}
      :dispatch-to [:page.sign-up/github-sign-up code user-type]}}))
 
+;; TODO : response (needed?)
 (re/reg-event-fx
  :page.sign-up/github-sign-up
  (fn [{:keys [db]} [_  code user-type]]
