@@ -173,7 +173,7 @@
                                                     :print-config-overrides true}}}}
 
     {:id "dev-server"
-     :source-paths ["src/ethlance/server" "src/ethlance/shared" "dev/server/cljs"]
+     :source-paths ["src/ethlance/server" "src/ethlance/shared" "dev/server/cljs" "src/district/server"]
      :figwheel {:on-jsload "ethlance.server.graphql.server/restart"}
      :compiler {:main ethlance.server.core
                 :output-to "target/node/ethlance_server.js"

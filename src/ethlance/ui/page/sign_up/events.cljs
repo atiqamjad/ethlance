@@ -116,8 +116,8 @@
                                      }
                                    }"
                                   :variables {:address user-address}
-                                  :on-success #(log/debug "initial query success" {:r %} )
-                                  :on-failure #(log/error "initial query error" {:r %})
+                                  ;; :on-success #(log/debug "initial query success" {:r %} )
+                                  :on-error #(log/error "initial query error" {:r %})
                                   }]})))
 
 ;; TODO : handle response

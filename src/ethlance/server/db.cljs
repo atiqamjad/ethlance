@@ -10,7 +10,11 @@
    [district.server.db.column-types :refer [address not-nil default-nil default-zero default-false sha3-hash primary-key]]
    [district.server.db.honeysql-extensions]
    [honeysql.core :as sql]
-   [honeysql.helpers :as sqlh :refer [merge-where merge-order-by merge-left-join defhelper]]
+   [honeysql.helpers :as sqlh :refer [merge-where merge-order-by merge-left-join defhelper insert-into]]
+
+   [honeysql-postgres.format]
+   [honeysql-postgres.helpers :as psqlh :refer [upsert on-conflict do-nothing do-update-set do-update-set!]]
+
    [medley.core :as medley]
    [mount.core :as mount :refer [defstate]]
    [taoensso.timbre :as log]
@@ -656,16 +660,41 @@
 ;; Application level db access ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn upsert-user! [conn user]
+(defn upsert-user! [conn {:user/keys [type] :as user}]
   (safe-go
-   (let [values (select-keys user (get-table-column-names :Users))
-         _ (<? (db/run! conn {:insert-into :Users
-                              :values [values]
-                              :upsert {:on-conflict [:user/address]
-                                       :do-update-set (keys values)}}))
+   (let [values (-> (select-keys user (get-table-column-names :Users))
+                    (update :user/type name))
+         _ (log/debug "@@@ upsert-user!" {:values values})
+         _ (<? (db/run! conn
+
+                        #_(-> (insert-into :Users)
+                            (values [values])
+                            (upsert (-> (on-conflict :user/address)
+                                        (do-update-set :user/email #_(keys values)))))
+
+                        ;; (-> (insert-into :distributors)
+                        ;;     (values [{:did 5 :dname "Gizmo Transglobal"}
+                        ;;              {:did 6 :dname "Associated Computing, Inc"}])
+                        ;;     (upsert (-> (on-conflict :did)
+                        ;;                 (do-update-set :dname))))
+
+
+
+                        {:insert-into :Users
+                         :values [{:user/address "0x4c3f13898913f15f12f902d6480178484063a6fb"
+                                   :user/email "bla@bla.com"}]
+                         :upsert {:do-update-set [:user/email]
+                                  :on-conflict [:user/address]}}
+
+                        #_{:insert-into :Users
+                         :values [values]
+                         ;; TODO : upsert throws
+                         :upsert {:do-update-set (keys values)
+                                  :on-conflict [:user/address]
+                                   }}))
          _ (log/debug "@@@ upsert-user!" {:_ _
                                           :user user})]
-     (case (:user/type user)
+     (case type
        :arbiter (let [arbiter (select-keys user (get-table-column-names :Arbiter))]
                   (<? (db/run! conn {:insert-into :Arbiter
                                      :values [arbiter]

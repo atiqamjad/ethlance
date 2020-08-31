@@ -6,6 +6,12 @@
             [honeysql.core :as sql]
             [district.server.logging];; TODO: remove
             [honeysql.format :as sql-format]
+
+            ;; [honeysql-postgres.format]
+            ;; [honeysql-postgres.format]
+            ;; [honeysql-postgres.helpers :as psqlh]
+            ;; [honeysql.helpers]
+
             [district.server.config :refer [config]]
             [district.shared.async-helpers :refer [safe-go <?]]
             [clojure.string :as str]))
@@ -55,10 +61,10 @@
                                         (sql/format statement
                                                     :parameterizer :postgresql
                                                     :allow-namespaced-names? true))
-         _ (log/debug "Running QUERY " {:q query-str :vals (or values [])})
-         res (<? (.query conn query-str (clj->js (or values []))))
-         _ (log/debug "query result" {:r res})
-         ]
+         _ (log/debug "Running QUERY " {:q query-str
+                                        :vals (or values [])
+                                        :statement statement})
+         res (<? (.query conn query-str (clj->js (or values []))))]
      (->> (js->clj (.-rows res))
           (map #(map-keys transform-result-keys-fn %))))))
 
