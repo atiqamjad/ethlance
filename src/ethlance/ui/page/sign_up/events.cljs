@@ -115,10 +115,7 @@
                                        arbiter_bio
                                      }
                                    }"
-                                  :variables {:address user-address}
-                                  ;; :on-success #(log/debug "initial query success" {:r %} )
-                                  :on-error #(log/error "initial query error" {:r %})
-                                  }]})))
+                                  :variables {:address user-address}}]})))
 
 ;; TODO : handle response
 (re/reg-event-fx

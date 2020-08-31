@@ -28,7 +28,7 @@
           fx
           new-fx))
 
-(defn do-reduce-handlers
+(defn- do-reduce-handlers
   [{:keys [db] :as cofx} f coll]
   (reduce (fn [fxs element]
             (let [updated-cofx (update-db cofx fxs)]
@@ -39,11 +39,12 @@
           coll))
 
 (defn reduce-handlers
-  [cofx values]
+  [cofx response]
   (do-reduce-handlers cofx
                       (fn [fxs [k v]]
+                        (log/debug "@ calling handler" {:k k :v v :fx fxs})
                         (handler fxs k v))
-                      values))
+                      response))
 
 (re-frame/reg-event-fx
  ::response
@@ -77,23 +78,34 @@
                       (let [response (js->clj (.-data (.-data response))
                                               :keywordize-keys true)]
                         (>evt [::response response]))
-                      (if on-error
-                        (on-error (js->clj (.-data response) :keywordize-keys true))
-                        (log/error "Error during query" {:response response}))))]
+                      (log/error "Error during query" {:error (js->clj (.-data response) :keywordize-keys true)})))]
      {::query [params callback]})))
 
 (defmethod handler :default
   [{:keys [db] :as cofx} k values]
   ;; NOTE: this is the default handler that is intented for queries and mutations
   ;; that have nothing to do besides reducing over their response values
-  (log/debug "default handler" {:k k})
+  (log/debug "default handler" {:k k
+                                :cofx cofx})
   (reduce-handlers cofx values))
 
 ;; TODO
-(defmethod handler :user_address
+(defmethod handler :user
   [{:keys [db] :as cofx} user-ident {:user/keys [email] :as user}]
 
-  (log/debug "user_address handler" {:u cofx})
+  (log/debug "user handler" {:u user
+                             :ident user-ident})
+
+  {:db (-> db (assoc :fubar :bar))}
+
+  )
+
+
+(defmethod handler :user_address
+  [{:keys [db] :as cofx} user-ident address]
+
+  (log/debug "user_address handler" {:a address
+                                     :ident user-ident})
 
   {:db (-> db (assoc :fu :bar))}
 
@@ -101,10 +113,10 @@
 
 (defmethod handler :user_email
   [{:keys [db] :as cofx} user-ident {:user/keys [email] :as user}]
-  (log/debug "user_email handler")
+  (log/debug "user_email handler" {:cofx cofx})
   {:db db})
 
 (defmethod handler :api/error
   [_ _ _]
-  ;;NOTE: this handler is here only to catch errors
+  ;; NOTE: this handler is here only to catch errors
   )
