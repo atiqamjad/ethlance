@@ -136,7 +136,7 @@
                                  }"
                                   :variables {:githubSignUpInput {:code code :user_address user-address :user_type user-type}}
                                   :on-success #(>evt [::unregister-initial-query-forwarder])
-                                  :on-failure #(prn "")}]})))
+                                  :on-failure #(prn "ERROR")}]})))
 
 (re/reg-event-fx
  ::unregister-initial-query-forwarder

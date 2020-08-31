@@ -4,10 +4,17 @@
    [re-frame.core :as re-frame]
    [taoensso.timbre :as log]
    [cljsjs.axios :as axios]
+   [camel-snake-kebab.extras :as camel-snake-extras]
    [ethlance.ui.util.component :refer [>evt]]
-   ))
+
+   [district.graphql-utils :as graphql-utils]))
 
 (defonce axios js/axios)
+
+(defn gql->clj [m]
+  (->> m
+       (js->clj)
+       (camel-snake-extras/transform-keys graphql-utils/gql-name->kw )))
 
 (defmulti handler
   (fn [_ key value]
@@ -42,7 +49,7 @@
   [cofx response]
   (do-reduce-handlers cofx
                       (fn [fxs [k v]]
-                        (log/debug "@ calling handler" {:k k :v v :fx fxs})
+                        ;; (log/debug "@ calling handler" {:k k :v v :fx fxs})
                         (handler fxs k v))
                       response))
 
@@ -75,9 +82,7 @@
                     (if (= 200 (.-status response))
                       ;; TODO we can still have errors even with a 200
                       ;; so we should log them or handle in some other way
-                      (let [response (js->clj (.-data (.-data response))
-                                              :keywordize-keys true)]
-                        (>evt [::response response]))
+                      (>evt [::response (gql->clj (.-data (.-data response)))])
                       (log/error "Error during query" {:error (js->clj (.-data response) :keywordize-keys true)})))]
      {::query [params callback]})))
 
@@ -101,7 +106,7 @@
   )
 
 
-(defmethod handler :user_address
+#_(defmethod handler :user/address
   [{:keys [db] :as cofx} user-ident address]
 
   (log/debug "user_address handler" {:a address
@@ -111,7 +116,7 @@
 
   )
 
-(defmethod handler :user_email
+#_(defmethod handler :user/email
   [{:keys [db] :as cofx} user-ident {:user/keys [email] :as user}]
   (log/debug "user_email handler" {:cofx cofx})
   {:db db})
